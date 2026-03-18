@@ -58,6 +58,52 @@ print("=== K = 10 Cluster Summary ===")
 print(cluster_summary_k10)
 print()
 
+# K-MEANS CLUSTERING (K = 15) -------------------------------
+kmeans15 = KMeans(n_clusters=15, random_state=42, n_init=10)
+
+train['Cluster_K15'] = kmeans15.fit_predict(X_train_scaled)
+test['Cluster_K15'] = kmeans15.predict(X_test_scaled)
+
+# COMPUTE CLUSTER SUMMARY -----------------------------------
+cluster_summary_k15 = train.groupby('Cluster_K15')[features].mean().round(2)
+
+# SORT by Chlorophyll-A (proxy for bloom severity)
+cluster_summary_k15 = cluster_summary_k15.sort_values(by='ChlorophyllA', ascending=False)
+
+# ASSIGN SEVERITY LABELS (15 levels) ------------------------
+severity_labels = [
+    "Extremely High", "Very Very High", "Very High", "High+",
+    "High", "Moderate High", "Moderate+", "Moderate",
+    "Moderate Low", "Low+", "Low", "Very Low",
+    "Very Very Low", "Minimal", "Negligible"
+]
+
+cluster_summary_k15['Algal Bloom Severity'] = severity_labels
+
+# OPTIONAL: Add numeric ranking (1 = highest severity)
+cluster_summary_k15['Severity_Rank'] = range(1, 16)
+
+# PRINT RESULTS ---------------------------------------------
+print("=== K = 15 Cluster Summary ===")
+print(cluster_summary_k15)
+print()
+
+# OPTIONAL: MAP CLUSTERS TO SEVERITY RANK -------------------
+# (useful for prediction or visualization)
+
+# Create mapping dictionary
+cluster_to_severity = cluster_summary_k15['Severity_Rank'].to_dict()
+
+# Apply mapping to datasets
+train['Predicted_Severity_K15'] = train['Cluster_K15'].map(cluster_to_severity)
+test['Predicted_Severity_K15'] = test['Cluster_K15'].map(cluster_to_severity)
+
+# SAVE OUTPUT FILES -----------------------------------------
+train.to_csv(r"C:\Sowmya\ScienceProject_Vrisha_2024\2024Data\UtahLake_Clustered_2020_2024_K15.csv", index=False)
+test.to_csv(r"C:\Sowmya\ScienceProject_Vrisha_2024\2024Data\UtahLake_Clustered_2025_K15.csv", index=False)
+
+print("Clustering complete. Files saved with K=15 results.")
+
 #  ADD SITE INFORMATION FOR PREDICTION ------------------------
 # Using your actual columns: 'Date' and 'ID'
 results_2025 = test[['ID', 'Date', 'Cluster_K5', 'Cluster_K10']]
